@@ -2,7 +2,7 @@
 """
 Daily Finance Brief Updater
 Runs via GitHub Actions — calls Anthropic API with web search
-to find 6 non-duplicate news stories and generate index.html.
+to find 7 non-duplicate news stories and generate index.html.
 """
 
 import json
@@ -27,8 +27,9 @@ CAT_LABELS = {
     4: "④ 重量級人物發言",
     5: "⑤ 保險／證券／銀行業大老闆異動",
     6: "⑥ 川普與美國 AI 大佬動向",
+    7: "⑦ 資產管理專法追蹤",
 }
-CAT_CSS = {1: "c1", 2: "c2", 3: "c3", 4: "c4", 5: "c5", 6: "c6"}
+CAT_CSS = {1: "c1", 2: "c2", 3: "c3", 4: "c4", 5: "c5", 6: "c6", 7: "c7"}
 
 # ── Read history for dedup ────────────────────────────────────
 with open("history.json", "r", encoding="utf-8") as f:
@@ -41,10 +42,10 @@ history_text = "\n".join(
 # ── Build prompt ──────────────────────────────────────────────
 PROMPT = f"""今天是 {DATE_DISPLAY}（週{WEEKDAY}）。
 
-你是一位台灣金融產業新聞編輯，負責為金融商品經理 Peggy 每日整理六大面向的重要新聞。
-請用「web_search」工具搜尋以下六大面向近 30 天瀏覽量最高的新聞，每個面向搜尋 1-2 次。
+你是一位台灣金融產業新聞編輯，負責為金融商品經理 Peggy 每日整理七大面向的重要新聞。
+請用「web_search」工具搜尋以下七大面向近 30 天瀏覽量最高的新聞，每個面向搜尋 1-2 次。
 
-## 六大面向與搜尋關鍵字建議
+## 七大面向與搜尋關鍵字建議
 
 1. **台灣金融產業**（搜：台灣 金控 銀行 獲利 {NOW.year}年{NOW.month}月）
 2. **法規發展**（搜：金管會 央行 金融法規 新制 {NOW.year}年{NOW.month}月）
@@ -52,10 +53,11 @@ PROMPT = f"""今天是 {DATE_DISPLAY}（週{WEEKDAY}）。
 4. **重量級人物發言**（搜：楊金龍 彭金隆 金融 發言 {NOW.year}年{NOW.month}月）
 5. **保險/證券/銀行業大老闆異動**（搜：金控 銀行 保險 董事長 總經理 人事 {NOW.year}年{NOW.month}月）
 6. **川普與美國AI大佬動向**（搜：Trump AI Nvidia OpenAI 黃仁勳 {NOW.year}年{NOW.month}月）
+7. **資產管理專法追蹤**（搜：亞洲資產管理中心 專法 金管會 高雄專區 家族辦公室 {NOW.year}年{NOW.month}月）
 
 ## 要求
 
-- 每個面向選 **1 條** 近 30 天瀏覽量最高的新聞
+- 每個面向選 **1 條** 近 30 天瀏覽量最高的新聞（共 7 條）
 - **不可與下列已播報清單重複**（主題相同即算重複）
 - 每條新聞須有：真實可點擊 URL、2-4 句摘要、PM 提醒（對金融商品設計的影響）
 - 標題用 <strong> 標記關鍵數字或重點
@@ -89,7 +91,7 @@ PROMPT = f"""今天是 {DATE_DISPLAY}（週{WEEKDAY}）。
   ]
 }}
 
-stories 和 history_entries 各 6 筆，cat_num 對應 1-6。"""
+stories 和 history_entries 各 7 筆，cat_num 對應 1-7。"""
 
 
 # ── Call Anthropic API ────────────────────────────────────────
@@ -161,7 +163,7 @@ HTML_TEMPLATE = """<!doctype html>
   .grid {{ display: grid; grid-template-columns: 1fr; gap: 16px; }}
   .card {{ background: #fff; border: 1px solid #e3e6ec; border-radius: 12px; padding: 22px 22px 18px; box-shadow: 0 1px 2px rgba(20,30,50,0.03); }}
   .cat {{ display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: #fff; padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }}
-  .c1 {{ background: #1f4ed8; }} .c2 {{ background: #0a8754; }} .c3 {{ background: #b5520e; }} .c4 {{ background: #6d28d9; }} .c5 {{ background: #b91c1c; }} .c6 {{ background: #0f766e; }}
+  .c1 {{ background: #1f4ed8; }} .c2 {{ background: #0a8754; }} .c3 {{ background: #b5520e; }} .c4 {{ background: #6d28d9; }} .c5 {{ background: #b91c1c; }} .c6 {{ background: #0f766e; }} .c7 {{ background: #be185d; }}
   h2.title {{ font-size: 18px; margin: 2px 0 6px; line-height: 1.4; }}
   .source {{ font-size: 12.5px; color: #5b6470; margin-bottom: 12px; word-break: break-all; }}
   .source a {{ color: #1f4ed8; text-decoration: none; }}
@@ -241,7 +243,7 @@ def main():
     stories = data["stories"]
     new_entries = data["history_entries"]
 
-    if len(stories) != 6:
+    if len(stories) != 7:
         print(f"WARNING: Expected 6 stories, got {len(stories)}")
 
     # Write index.html
